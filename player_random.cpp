@@ -27,7 +27,7 @@ deque<state> generate_all_move(){
 }
 
 void heuristic(){
-
+    cout << "???";
 }
 int alpha_beta(state current, int depth, int alpha,int beta, bool maximzingplayer){
     if (!depth || current.game_end|| !current.chess_left){
