@@ -14,10 +14,12 @@ enum SPOT_STATE {
 int player;
 const int SIZE = 15;
 std::array<std::array<int, SIZE>, SIZE> board;
+string player_type[3];
 
 int calculate_score(string input, int who, int left, int right, int valid_range){
     int current_score = 0;
-    int defense = (who != player), len = left - right + 1;
+    string compare; compare.push_back(input[4]);
+    int defense = (player_type[who] != compare), len = left - right + 1;
     char op = (input[4] == 'o')?'x':'o';
     bool left_three ,right_three;
     if (len >= 5){
@@ -171,35 +173,23 @@ int heuristic(int who){
     int op;
     if (who == 1) op = 2;
     else op = 1;
-    int lengh = 7, score = 0;
+    int score = 0;
     int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
-    int chess_x_type[4] = {0}, chess_y_type[4] = {0};
-    string chess_road;
-    string player_type[3];
     player_type[0] = ".", player_type[who] = "o", player_type[op] = "x";
     for (int i = 0; i < SIZE; i++){
         for (int j = 0; j < SIZE; j++){
             if (board[i][j] == EMPTY) continue;
             for (int k = 0; k < 4; k++){
-                if (!(chess_x_type[k] & (1<<i)) && !(chess_y_type[k] & (1<<j))) continue;
-                chess_x_type[k] ^= (1<<i), chess_y_type[k] ^= (1<<j);
+                string chess_road;
                 for (int l = -4; l <= 4; l++){
                     if (i+dir[k][0]*l >= 0 && i+dir[k][0]*l < SIZE && j+dir[k][1]*l >= 0 && j+dir[k][1]*l < SIZE)
                         chess_road += player_type[op];
-                    else {
+                    else
                         chess_road += player_type[board[i+dir[k][0]*l][j+dir[k][1]*l]];
-                    }
                 }
-                //去掉算過的同方向棋型
                 int left = 5, right = 3, l = 5, r = 3;
-                while (chess_road[left] == chess_road[4] && left <= 8){
-                    chess_x_type[k] ^= (1<<(i+dir[k][0]*(left-4))), chess_y_type[k] ^= (1<<(j+dir[k][1]*(left-4)));
-                    left++;
-                }
-                while (chess_road[right] == chess_road[4] && right >= 0){
-                    chess_x_type[k] ^= (1<<(i+dir[k][0]*(right-4))), chess_y_type[k] ^= (1<<(j+dir[k][1]*(right-4)));
-                    right--;
-                }
+                while (chess_road[left] == chess_road[4] && left <= 8) left++;
+                while (chess_road[right] == chess_road[4] && right >= 0) right--;
                 while ((chess_road[l] == chess_road[4] || chess_road[l] == '.') && l <= 8) l++;
                 while ((chess_road[r] == chess_road[4] || chess_road[r] == '.') && r >= 0) r--;
                 score += calculate_score(chess_road, who, left-1, right+1, l-r+1);
@@ -225,14 +215,16 @@ struct state{
 deque<state> generate_all_move(int who){
     int dir[8][2] = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}, {1, 1}, {1, -1}, {-1, 1}, {-1 ,-1}};
     deque<state> all_possible_move;
-    for (int i = 0; i < SIZE; i++)
-    for (int j = 0; j < SIZE; j++){
-        if (board[i][j] != EMPTY){
-            for (int k = 0; k < 8; k++){
-                if (dir[k][0]+i >= 0 && dir[k][0]+i < SIZE && dir[k][1]+j >= 0 && dir[k][1]+i < SIZE && board[dir[k][0]+i][dir[k][1]+j] == EMPTY){
-                    state tmp;
-                    tmp.set_on_board(dir[k][0]+i, dir[k][1]+j, who);
-                    all_possible_move.emplace_back(tmp);
+    cout << '?';
+    for (int i = 0; i < SIZE; i++){
+        for (int j = 0; j < SIZE; j++){
+            if (board[i][j] != EMPTY){
+                for (int k = 0; k < 8; k++){
+                    if (dir[k][0]+i >= 0 && dir[k][0]+i < SIZE && dir[k][1]+j >= 0 && dir[k][1]+j < SIZE && board[dir[k][0]+i][dir[k][1]+j] == EMPTY){
+                        state tmp;
+                        tmp.set_on_board(dir[k][0]+i, dir[k][1]+j, who);
+                        all_possible_move.emplace_back(tmp);
+                    }
                 }
             }
         }
