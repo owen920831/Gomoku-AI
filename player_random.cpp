@@ -131,7 +131,37 @@ int calculate_score(string input, int who, int left, int right, int valid_range)
         }
     }
     else {
-
+        bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
+        if (right_is_empty){
+            if (input[right-2] == input[4]){
+                if (input[right-3] == '.'){
+                    if (input[left+1] == op){  // XMXMP
+                        if (defense) current_score = -3;
+                        else current_score = 1;
+                    }
+                }
+            }
+        }
+        if (left_is_empty){
+            if (input[left+2] == input[4]){
+                if (input[left+3] == '.'){
+                    if (right_is_empty){// XMXMX
+                        if (defense) current_score = -50;
+                        else current_score = 20;
+                    }
+                    else{// PMXMX
+                        if (defense) current_score = -3;
+                        else current_score = 1;
+                    }
+                }
+            }
+            else if(input[left+2] == '.'){
+                if (input[left+3] == input[4] && input[left+4] == '.'){  //XMXXMX
+                    if (defense) current_score = -50;
+                    else current_score = 20;
+                }
+            }
+        }
     }
     
     return current_score;
