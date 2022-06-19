@@ -13,29 +13,46 @@ enum SPOT_STATE {
 
 int player;
 const int SIZE = 15;
-int chess_left = SIZE*SIZE;
 std::array<std::array<int, SIZE>, SIZE> board;
-int v = 1000;
-int heuristic(){
-    v++;
-    return v;
+
+int calculate_score(string input, int who){
+
+
+}
+
+int heuristic(int who){
+    int lengh = 7, score = 0;
+    int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+    int chess_x_type[4] = {0}, chess_y_type[4] = {0};
+    string chess_road;
+    string type[3] = {".", "o", "x"};
+    for (int i = 0; i < SIZE; i++){
+    for (int j = 0; j < SIZE; j++)
+        for (int k = 0; k < 4; k++){
+            if (!(chess_x_type[k] & (1<<i)) && !(chess_y_type[k] & (1<<j))) continue;
+            chess_road += type[board[i][j]];
+            for (int l = -3; l <= 3; l++){
+                if (i+dir[k][0]*l >= 0 && i+dir[k][0]*l < SIZE && j+dir[k][1]*l >= 0 && j+dir[k][1]*l < SIZE){
+                    chess_x_type[k] ^= (1<<(i+dir[k][0]*l)), chess_y_type[k] ^= (1<<(j+dir[k][1]*l));
+                    chess_road += type[board[i+dir[k][0]*l][j+dir[k][1]*l]];
+                }
+            }
+            score += calculate_score(chess_road, who);
+        }
+    }
+    return score;
 }
 struct state{
-    bool game_end, board_empty;
     int score, new_x, new_y;
     int new_chess;
+    int chess_left;
     state(){
-        board_empty = false;
-        game_end = false;
-        new_x = new_y = 0;
-        score = 0;
-        new_chess = 0;
+        chess_left = new_x = new_y = score = new_chess = 0;
     }
     void set_on_board(int col, int row, int who){
         new_x = col, new_y = row, new_chess = who;
-        chess_left--;
         board[col][row] = player;
-        score = heuristic();
+        score = heuristic(who);
     }
 };
 
@@ -58,47 +75,40 @@ deque<state> generate_all_move(int who){
 }
 
 //(score, (x, y))
-pair<int, pair<int, int> > alpha_beta(state current, int depth, int alpha, int beta, int who){
+state alpha_beta(state current, int depth, int alpha, int beta, int who){
     int op;
     if (player == 1) op = 2;
     else op = 1;
-    if (!depth){
-        pair<int, pair<int, int>> heur_score;
-        heur_score.first = current.score;
-        heur_score.second.first = current.new_x, heur_score.second.second = current.new_y;
-        board[current.new_x][current.new_y] = EMPTY;
-        chess_left++;
-        return heur_score;
-    }
+    if (!depth || !current.chess_left) return current;
     deque<state> all_moves = generate_all_move(player);
     if (who == player){ //1 is max
-        pair<int, pair<int, int>>  max_evaluate;
-        max_evaluate.first = INT_MIN;
+        state  max_evaluate;
+        max_evaluate.score = INT_MIN;
         for (auto node:all_moves){
-            pair<int, pair<int, int>> evaluate;
+            state evaluate;
             board[node.new_x][node.new_y] = node.new_chess;
+            node.chess_left--;
             evaluate = alpha_beta(node, depth-1, alpha, beta, op);
             board[node.new_x][node.new_y] = EMPTY;
-            if (max_evaluate.first < evaluate.first){
-                max_evaluate = evaluate;
-            }
-            alpha = max(alpha, evaluate.first);
+            node.chess_left++;
+            if (max_evaluate.score < evaluate.score) max_evaluate = evaluate;
+            alpha = max(alpha, evaluate.score);
             if (alpha >= beta) break;
         }
         return max_evaluate;
     }
     else {
-        pair<int, pair<int, int>> min_evaluate;
-        min_evaluate.first = INT_MAX;
+        state min_evaluate;
+        min_evaluate.score = INT_MAX;
         for (auto node:all_moves){
-            pair<int, pair<int, int>> evaluate;
+            state evaluate;
             board[node.new_x][node.new_y] = node.new_chess;
+            node.chess_left--;
             evaluate = alpha_beta(node, depth-1, alpha, beta, op);
             board[node.new_x][node.new_y] = EMPTY;
-            if (min_evaluate.first > evaluate.first){
-                min_evaluate = evaluate;
-            }
-            beta = min(beta, evaluate.first);
+            node.chess_left++;
+            if (min_evaluate.score > evaluate.score) min_evaluate = evaluate;
+            beta = min(beta, evaluate.score);
             if (alpha >= beta) break;
         }
         return min_evaluate;
@@ -116,26 +126,21 @@ void read_board(std::ifstream& fin) {
 
 void write_valid_spot(std::ofstream& fout) {
     int x, y;
-    // Keep updating the output until getting killed.
-    bool flag = false;
+    bool flag = false; //check whether the board is empty
     state initial;
-    // Choose a random spot.
-    if (!flag) {
-        for (int i = 0; i < SIZE && !flag; i++){
-            for (int j = 0; j < SIZE; j++){
-                if (board[i][j] != EMPTY){
-                    flag = true;
-                    break;
-                }
+    for (int i = 0; i < SIZE; i++){
+        for (int j = 0; j < SIZE; j++){
+            if (board[i][j] != EMPTY){
+                flag = true;
+                initial.chess_left++;
             }
         }
-        if (!flag)
-            x = y = 7;
     }
-    if (flag){
-        pair<int, pair<int, int>> now = alpha_beta(initial, 4, INT_MIN+1, INT_MAX-1, player);
-        x = now.second.first;
-        y = now.second.second;
+    if (!flag) x = y = 7; //if is empty，choose the middle
+    else {
+        state now = alpha_beta(initial, 3, INT_MIN+1, INT_MAX-1, player);
+        x = now.new_x;
+        y = now.new_y;
     }
     if (board[x][y] == EMPTY) {
         fout << x << " " << y << std::endl;
