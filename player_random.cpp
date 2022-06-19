@@ -23,8 +23,8 @@ int calculate_score(string input, int who, int left, int right, int valid_range)
     char op = (input[4] == 'o')?'x':'o';
     bool left_three ,right_three;
     if (len >= 5){
-        if (defense) return 1000000;
-        else return -10000000;
+        if (defense) return -10000000;
+        else return 1000000;
     }
     else {
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
@@ -170,9 +170,8 @@ int calculate_score(string input, int who, int left, int right, int valid_range)
 }
 
 int heuristic(int who){
-    int op;
-    if (who == 1) op = 2;
-    else op = 1;
+    string chess_road;
+    int op = (who == 1)?2:1;
     int score = 0;
     int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
     player_type[0] = ".", player_type[who] = "o", player_type[op] = "x";
@@ -180,19 +179,21 @@ int heuristic(int who){
         for (int j = 0; j < SIZE; j++){
             if (board[i][j] == EMPTY) continue;
             for (int k = 0; k < 4; k++){
-                string chess_road;
                 for (int l = -4; l <= 4; l++){
                     if (i+dir[k][0]*l >= 0 && i+dir[k][0]*l < SIZE && j+dir[k][1]*l >= 0 && j+dir[k][1]*l < SIZE)
-                        chess_road += player_type[op];
-                    else
                         chess_road += player_type[board[i+dir[k][0]*l][j+dir[k][1]*l]];
+                    else
+                        chess_road += player_type[op];
                 }
-                int left = 5, right = 3, l = 5, r = 3;
+                int left = 4, right = 4, l = 4, r = 4;
+                //cout << chess_road << '\n';
                 while (chess_road[left] == chess_road[4] && left <= 8) left++;
                 while (chess_road[right] == chess_road[4] && right >= 0) right--;
                 while ((chess_road[l] == chess_road[4] || chess_road[l] == '.') && l <= 8) l++;
                 while ((chess_road[r] == chess_road[4] || chess_road[r] == '.') && r >= 0) r--;
-                score += calculate_score(chess_road, who, left-1, right+1, l-r+1);
+                //cout << left << ' ' << right << ' ' << l << ' ' << r << '\n';
+                score += calculate_score(chess_road, who, left-1, right+1, l-r-1);
+                chess_road.clear();
             }
         }
     }
@@ -207,15 +208,13 @@ struct state{
     }
     void set_on_board(int col, int row, int who){
         new_x = col, new_y = row, new_chess = who;
-        board[col][row] = player;
         score = heuristic(who);
     }
 };
 
-deque<state> generate_all_move(int who){
+vector<state> generate_all_move(int who){
     int dir[8][2] = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}, {1, 1}, {1, -1}, {-1, 1}, {-1 ,-1}};
-    deque<state> all_possible_move;
-    cout << '?';
+    vector<state> all_possible_move;
     for (int i = 0; i < SIZE; i++){
         for (int j = 0; j < SIZE; j++){
             if (board[i][j] != EMPTY){
@@ -234,11 +233,9 @@ deque<state> generate_all_move(int who){
 
 //(score, (x, y))
 state alpha_beta(state current, int depth, int alpha, int beta, int who){
-    int op;
-    if (player == 1) op = 2;
-    else op = 1;
+    int op = (who == 1)?2:1;
     if (!depth || !current.chess_left) return current;
-    deque<state> all_moves = generate_all_move(player);
+    vector<state> all_moves = generate_all_move(player);
     if (who == player){ //1 is max
         state  max_evaluate;
         max_evaluate.score = INT_MIN;
@@ -296,7 +293,7 @@ void write_valid_spot(std::ofstream& fout) {
     }
     if (!flag) x = y = 7; //if is empty，choose the middle
     else {
-        state now = alpha_beta(initial, 3, INT_MIN+1, INT_MAX-1, player);
+        state now = alpha_beta(initial, 3, INT_MIN/2, INT_MAX/2, player);
         x = now.new_x;
         y = now.new_y;
     }
