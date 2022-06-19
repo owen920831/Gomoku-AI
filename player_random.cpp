@@ -15,28 +15,29 @@ int player, opp;
 const int SIZE = 15;
 std::array<std::array<int, SIZE>, SIZE> board;
 string player_type[3];
+bitset<15> chess_place[4][15];
 
 int calculate_score(string input, int left, int right, int valid_range){
-    int current_score = 0;
+    int current_score = 1;
     string compare; compare.push_back(input[4]); 
-    int defense = (compare == "o"), len = left - right + 1;
+    int defense = (compare != "o"), len = left - right + 1;
+    if (defense) current_score*=-2;
     char op = (input[4] == 'o')? 'x' : 'o';
     bool left_three = false, right_three = false;
     if (len >= 5){
-        if (defense) return 10000000; 
-        else return -1000000;
+        if (defense) return -10000000; 
+        else return 1000000;
     }
-    // else {
-    //     bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
-    //     if (!left_is_empty&&!right_is_empty){
-    //         if (defense) return -1000; 
-    //         else return 1000;
-    //     }
-    // }
-    else if (len == 4){
+    else {
+        bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
+        if (!left_is_empty&&!right_is_empty){
+            return current_score*2;
+        }
+    }
+    if (len == 4){
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
         if (left_is_empty && right_is_empty){
-            if (defense) current_score = -100000;
+            if (defense) current_score = -180000;
             else current_score = 50000;
         }
         else {
@@ -48,13 +49,13 @@ int calculate_score(string input, int left, int right, int valid_range){
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.'); 
         if (left_is_empty){
             if (input[left+2] == input[4]){
-                if (defense) current_score = -100000; //ooo.o
+                if (defense) current_score = -180000; //ooo.o
                 else current_score = 400;
             }
         }
         if (right_is_empty){
             if (input[left-2] == input[4]){         //o.ooo
-                if (defense) current_score = -100000;
+                if (defense) current_score = -180000;
                 else current_score = 400;
             }
         }
@@ -64,13 +65,13 @@ int calculate_score(string input, int left, int right, int valid_range){
                 else current_score = 400;
             }
             else {                            //.ooo.x
-                if (defense) current_score = -50;
-                else current_score = 20;
+                if (defense) current_score = -60;
+                else current_score = 25;
             }
         }
         else {                              
-            if (defense) current_score = -50;
-            else current_score = 20;
+            if (defense) current_score = -60;
+            else current_score = 25;
         }
     }
     else if (len == 2){
@@ -84,15 +85,15 @@ int calculate_score(string input, int left, int right, int valid_range){
                         else current_score = 400;
                     }
                     else{           // XMXMMP
-                        if (defense) current_score = -50;
-                        else current_score = 20;
+                        if (defense) current_score = -60;
+                        else current_score = 25;
                     }
                     right_three = true;
                 }
                 else if (input[right-3] == op){ // PMXMMX
                     if (input[left+1] == '.'){
-                        if (defense) current_score = -50;
-                        else current_score = 20;
+                        if (defense) current_score = -60;
+                        else current_score = 25;
                         left_three = true;
                     }
                 }
@@ -101,7 +102,7 @@ int calculate_score(string input, int left, int right, int valid_range){
         if (left_is_empty){
             if (input[left+2] == input[4]){
                 if (input[left+3] == input[4]){  // MMXMM
-                    if (defense) current_score = -100000;
+                    if (defense) current_score = -180000;
                     else current_score = 400;
                     left_three = true;
                 }
@@ -111,26 +112,26 @@ int calculate_score(string input, int left, int right, int valid_range){
                         else current_score = 400;
                     }
                     else{ // PMMXMX
-                        if (defense) current_score = -50;
-                        else current_score = 20;
+                        if (defense) current_score = -60;
+                        else current_score = 25;
                     }
                     left_three = true;
                 }
                 else if (left_is_empty){ // XMMXMP
-                    if (defense) current_score = -50;
-                    else current_score = 20;
+                    if (defense) current_score = -60;
+                    else current_score = 25;
                     left_three = true;
                 }
             }
         }
         if (left_three || right_three){}
         else if (left_is_empty && right_is_empty){ // XMMX
-            if (defense) current_score = -50;
-            else current_score = 20;
+            if (defense) current_score = -60;
+            else current_score = 25;
         }
         else if (left_is_empty || right_is_empty){ // PMMX, XMMP
-            if (defense) current_score = -3;
-            else current_score = 2;
+            if (defense) current_score = -5;
+            else current_score = 1;
         }
     }
     else if (len == 1) {
@@ -139,8 +140,8 @@ int calculate_score(string input, int left, int right, int valid_range){
             if (input[right-2] == input[4]){
                 if (input[right-3] == '.'){
                     if (input[left+1] == op){  // XMXMP
-                        if (defense) current_score = -3;
-                        else current_score = 2;
+                        if (defense) current_score = -5;
+                        else current_score = 1;
                     }
                 }
             }
@@ -149,47 +150,56 @@ int calculate_score(string input, int left, int right, int valid_range){
             if (input[left+2] == input[4]){
                 if (input[left+3] == '.'){
                     if (right_is_empty){// XMXMX
-                        if (defense) current_score = -50;
-                        else current_score = 20;
+                        if (defense) current_score = -60;
+                        else current_score = 25;
                     }
                     else{// PMXMX
-                        if (defense) current_score = -3;
-                        else current_score = 2; 
+                        if (defense) current_score = -5;
+                        else current_score = 1; 
                     }
                 }
             }
             else if(input[left+2] == '.'){
                 if (input[left+3] == input[4] && input[left+4] == '.'){  //XMXXMX
-                    if (defense) current_score = -50;
-                    else current_score = 20;
+                    if (defense) current_score = -60;
+                    else current_score = 25;
                 }
             }
         }
     }
-    //cout << current_score << '\n';
+    //cout << current_score << ' ';
     return current_score;
 }
 
 int heuristic(int who){
-    string chess_road;
-    int op = (who == 1)?2:1;
+    string chess_road; 
     int score = 0;
     int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
-    player_type[0] = ".", player_type[who] = "o", player_type[op] = "x";
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 15; j++)
+            chess_place[i][j].reset();
+    player_type[0] = ".", player_type[player] = "o", player_type[who] = "x";
     for (int i = 0; i < SIZE; i++){
         for (int j = 0; j < SIZE; j++){
             if (board[i][j] == EMPTY) continue;
             for (int k = 0; k < 4; k++){
+                if (chess_place[k][i][j]) continue; 
                 for (int l = -4; l <= 4; l++){
                     if (i+dir[k][0]*l >= 0 && i+dir[k][0]*l < SIZE && j+dir[k][1]*l >= 0 && j+dir[k][1]*l < SIZE)
                         chess_road += player_type[board[i+dir[k][0]*l][j+dir[k][1]*l]];
                     else
-                        chess_road += player_type[op];
+                        chess_road += player_type[who];
                 }
                 //cout << chess_road << '\n';
                 int left = 4, right = 4, l = 4, r = 4;
-                while (chess_road[left] == chess_road[4] && left <= 8) left++;
-                while (chess_road[right] == chess_road[4] && right >= 0) right--;
+                while (chess_road[left] == chess_road[4] && left <= 8){
+                    chess_place[k][i+dir[k][0]*(left-4)][j+dir[k][1]*(left-4)] = true;
+                    left++;
+                }
+                while (chess_road[right] == chess_road[4] && right >= 0){
+                    chess_place[k][i+dir[k][0]*(right-4)][j+dir[k][1]*(right-4)] = true;
+                    right--;
+                }
                 while ((chess_road[l] == chess_road[4] || chess_road[l] == '.') && l <= 8) l++;
                 while ((chess_road[r] == chess_road[4] || chess_road[r] == '.') && r >= 0) r--;
                 score += calculate_score(chess_road, left-1, right+1, l-r-1);
@@ -235,8 +245,8 @@ vector<state> generate_all_move(int who){
 //(score, (x, y))
 state alpha_beta(state current, int depth, int alpha, int beta, int who){
     if (!depth || !current.chess_left){
-        current.score = heuristic(who);
-        //cout << current.new_x << ' ' << current.new_y << ' ' <<current.score << '\n';
+        current.score = heuristic(opp);
+        //cout << '\n' <<current.new_x << ' ' << current.new_y << ' ' <<current.score << '\n';
         return current;
     }
     vector<state> all_moves = generate_all_move(who);
@@ -298,7 +308,7 @@ void write_valid_spot(std::ofstream& fout) {
     }
     if (!flag) x = y = 7; //if is empty，choose the middle
     else {
-        state now = alpha_beta(initial, 1, INT_MIN/2, INT_MAX/2, player);
+        state now = alpha_beta(initial, 1, INT_MIN+100, INT_MAX-100, player);
         x = now.new_x;
         y = now.new_y;
     }
