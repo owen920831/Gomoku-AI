@@ -30,7 +30,7 @@ int calculate_score(string input, int left, int right, int valid_range){
     }
     else {
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
-        if (!left_is_empty&&!right_is_empty){
+        if ((!left_is_empty&&!right_is_empty) || valid_range <= 4){
             current_score = 0;
         }
     }
@@ -41,7 +41,7 @@ int calculate_score(string input, int left, int right, int valid_range){
             else current_score = 50000;
         }
         else {
-            if (defense) current_score = -200000;
+            if (defense) current_score = -150000;
             else current_score = 400;
         }
     }
@@ -49,19 +49,19 @@ int calculate_score(string input, int left, int right, int valid_range){
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.'); 
         if (left_is_empty){
             if (input[left+2] == input[4]){
-                if (defense) current_score = -200000; //ooo.o
-                else current_score = 400;
+                if (defense) return  -150000; //ooo.o
+                else return  400;
             }
         }
         if (right_is_empty){
             if (input[left-2] == input[4]){         //o.ooo
-                if (defense) current_score = -200000;
-                else current_score = 400;
+                if (defense)  return -150000;
+                else return 400;
             }
         }
         if (left_is_empty && right_is_empty){
             if (valid_range > 5){               //.ooo..
-                if (defense) current_score = -8000;
+                if (defense) current_score = -10000;
                 else current_score = 400;
             }
             else {                            //.ooo.x
@@ -81,7 +81,7 @@ int calculate_score(string input, int left, int right, int valid_range){
             if (input[right-2] == input[4]){
                 if (input[right-3] == '.'){
                     if (input[left+1] == '.'){ // XMXMMX
-                        if (defense) current_score = -8000;
+                        if (defense) current_score = -10000;
                         else current_score = 400;
                     }
                     else{           // XMXMMP
@@ -102,13 +102,13 @@ int calculate_score(string input, int left, int right, int valid_range){
         if (left_is_empty){
             if (input[left+2] == input[4]){
                 if (input[left+3] == input[4]){  // MMXMM
-                    if (defense) current_score = -180000;
+                    if (defense) current_score = -150000;
                     else current_score = 400;
                     left_three = true;
                 }
                 else if (input[left+3] == '.'){
                     if (right_is_empty){  //XMMXMX
-                        if (defense) current_score = -8000;
+                        if (defense) current_score = -10000;
                         else current_score = 400;
                     }
                     else{ // PMMXMX
@@ -130,22 +130,22 @@ int calculate_score(string input, int left, int right, int valid_range){
             else current_score = 25;
         }
         else if (left_is_empty || right_is_empty){ // PMMX, XMMP
-            if (defense) current_score = -6;
-            else current_score = 3;
+            if (defense) current_score = -4;
+            else current_score = 2;
         }
     }
     else if (len == 1) {
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
         if (right_is_empty && left_is_empty){
-            if (defense) current_score = -5;
+            if (defense) current_score = -4;
             else current_score = 2;
         }
         if (right_is_empty){
             if (input[right-2] == input[4]){
                 if (input[right-3] == '.'){
                     if (input[left+1] == op){  // XMXMP
-                        if (defense) current_score = -6;
-                        else current_score = 3;
+                        if (defense) current_score = -4;
+                        else current_score = 2;
                     }
                 }
             }
@@ -158,8 +158,8 @@ int calculate_score(string input, int left, int right, int valid_range){
                         else current_score = 25;
                     }
                     else{// PMXMX
-                        if (defense) current_score = -6;
-                        else current_score = 3; 
+                        if (defense) current_score = -4;
+                        else current_score = 2; 
                     }
                 }
             }
@@ -171,7 +171,7 @@ int calculate_score(string input, int left, int right, int valid_range){
             }
         }
     }
-    //cout << current_score << ' ';
+    //cout << current_score << '\n';
     return current_score;
 }
 
@@ -234,13 +234,16 @@ vector<state> generate_all_move(int who){
     vector<state> all_possible_move;
     for (int i = 0; i < SIZE; i++){
         for (int j = 0; j < SIZE; j++){
-            if (board[i][j] != EMPTY){
-                for (int k = 0; k < 8; k++){
-                    if (dir[k][0]+i >= 0 && dir[k][0]+i < SIZE && dir[k][1]+j >= 0 && dir[k][1]+j < SIZE && board[dir[k][0]+i][dir[k][1]+j] == EMPTY){
-                        state tmp;
-                        tmp.set_on_board(dir[k][0]+i, dir[k][1]+j, who);
-                        all_possible_move.emplace_back(tmp);
-                    }
+            //if (board[5][7]) cout << "g";
+            if (board[i][j] == EMPTY){
+                bool flag = false;
+                for (int k = 0; k < 8; k++) if (dir[k][0]+i >= 0 && dir[k][0]+i < SIZE && dir[k][1]+j >= 0 && dir[k][1]+j < SIZE && board[dir[k][0]+i][dir[k][1]+j] != EMPTY) flag = true;
+                if (flag) {
+                    //if (board[5][7]) cout << "gggg\n";
+                    state tmp;
+                    tmp.set_on_board(i, j, who);
+                    //cout << tmp.new_x << ' '<<tmp.new_y << '\n'; 
+                    all_possible_move.emplace_back(tmp);
                 }
             }
         }
@@ -250,25 +253,35 @@ vector<state> generate_all_move(int who){
 
 //(score, (x, y))
 state alpha_beta(state current, int depth, int alpha, int beta, int who){
+    int op = (who == 1)?2:1; 
     if (!depth || !current.chess_left){
         current.score = heuristic();
+        //cout << '\n';
         //cout <<current.new_x << ' ' << current.new_y << ' ' <<current.score << '\n';
         return current;
     }
     vector<state> all_moves = generate_all_move(who);
+    //cout << '\n';
     if (who == player){ //1 is max
         state  max_evaluate;
         max_evaluate.score = INT_MIN;
         for (auto node:all_moves){
             state evaluate;
-            board[node.new_x][node.new_y] = node.new_chess;
+            board[node.new_x][node.new_y] = who;
             node.chess_left--;
-            evaluate = alpha_beta(node, depth-1, alpha, beta, opp);
-            cout <<evaluate.new_x << ' ' << evaluate.new_y << ' ' <<evaluate.score << '\n';
+            //cout << "board:" <<board[5][7] << '\n';
+            evaluate = alpha_beta(node, depth-1, alpha, beta, op);
+            //evaluate.new_x = node.new_x, evaluate.new_y = node.new_y;
             board[node.new_x][node.new_y] = EMPTY;
             node.chess_left++;
-            if (max_evaluate.score < evaluate.score) max_evaluate = evaluate;
-            alpha = max(alpha, evaluate.score);
+            if (max_evaluate.score < evaluate.score){
+                max_evaluate.new_x = node.new_x;
+                max_evaluate.new_y = node.new_y;
+                max_evaluate.score = evaluate.score;
+                max_evaluate.new_chess = evaluate.new_chess;
+            }
+            //cout << "a : " << node.new_x << ' ' << node.new_y << ' ' << evaluate.score << '\n';
+            alpha = max(alpha, max_evaluate.score);
             if (alpha >= beta) break;
         }
         return max_evaluate;
@@ -278,14 +291,21 @@ state alpha_beta(state current, int depth, int alpha, int beta, int who){
         min_evaluate.score = INT_MAX;
         for (auto node:all_moves){
             state evaluate;
-            board[node.new_x][node.new_y] = node.new_chess;
+            board[node.new_x][node.new_y] = who;
             node.chess_left--;
-            evaluate = alpha_beta(node, depth-1, alpha, beta, player);
-            //cout <<evaluate.new_x << ' ' << evaluate.new_y << ' ' <<evaluate.score << '\n' << '\n';
+            //cout << "board:" <<board[5][7] << '\n';
+            evaluate = alpha_beta(node, depth-1, alpha, beta, op);
+            //evaluate.new_x = node.new_x, evaluate.new_y = node.new_y;
             board[node.new_x][node.new_y] = EMPTY;
             node.chess_left++;
-            if (min_evaluate.score > evaluate.score) min_evaluate = evaluate;
-            beta = min(beta, evaluate.score);
+            if (min_evaluate.score > evaluate.score){
+                min_evaluate.new_x = node.new_x;
+                min_evaluate.new_y = node.new_y;
+                min_evaluate.score = evaluate.score;
+                min_evaluate.new_chess = evaluate.new_chess;
+            }
+            //cout << "b : "<< node.new_x << ' ' << node.new_y << ' ' << evaluate.score << '\n';
+            beta = min(beta, min_evaluate.score);
             if (alpha >= beta) break;
         }
         return min_evaluate;
@@ -305,6 +325,7 @@ void write_valid_spot(std::ofstream& fout) {
     int x, y;
     bool flag = false; //check whether the board is empty
     state initial;
+    state now;
     opp = (player == 1)?2:1;
     for (int i = 0; i < SIZE; i++){
         for (int j = 0; j < SIZE; j++){
@@ -316,17 +337,18 @@ void write_valid_spot(std::ofstream& fout) {
     }
     if (!flag) x = y = 7; //if is empty，choose the middle
     else {
-        state now = alpha_beta(initial, 1, INT_MIN, INT_MAX, player);
+        now = alpha_beta(initial, 2, INT_MIN, INT_MAX, player);
         x = now.new_x;
         y = now.new_y;
     }
     if (board[x][y] == EMPTY) {
+        //cout << "place :" << x << ' ' << y << ' ' << now.score << '\n';
         fout << x << " " << y << std::endl;
         // Remember to flush the output to ensure the last action is written to file.
         fout.flush();
     }
 }
-
+ 
 int main(int, char** argv) {
     std::ifstream fin(argv[1]);
     std::ofstream fout(argv[2]);
