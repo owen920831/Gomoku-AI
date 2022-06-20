@@ -29,9 +29,8 @@ int calculate_score(string input, int left, int right, int valid_range){
         else current_score = 1500000;
     }
     else {
-        bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
-        if ((!left_is_empty&&!right_is_empty) || valid_range <= 4){
-            current_score = 0;
+        if (valid_range <= 4){
+            return 0;
         }
     }
     if (len == 4){
@@ -60,7 +59,11 @@ int calculate_score(string input, int left, int right, int valid_range){
             }
         }
         if (left_is_empty && right_is_empty){
-            if (valid_range > 5){               //.ooo..
+            if (input[right-2] == input[4] && input[left+2] == input[4]){
+                if (defense) return -10000000;
+                else return 1500000;
+            }
+            else if (valid_range > 5){               //.ooo..
                 if (defense) current_score = -10000;
                 else current_score = 400;
             }
@@ -137,8 +140,18 @@ int calculate_score(string input, int left, int right, int valid_range){
     else if (len == 1) {
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
         if (right_is_empty && left_is_empty){
-            if (defense) current_score = -4;
-            else current_score = 2;
+            if (input[right-2] == input[4] && input[left+2] == input[4]){
+                if (defense) return -60;
+                else return 25;
+            }
+            else if ((input[right-2] == input[4] && input[left+2] == op)||(input[left+2] == input[4] && input[right-2] == op)){
+                if (defense) return -60;
+                else return 25;
+            }
+            else{
+                if (defense) return -4;
+                else return 2;
+            }
         }
         if (right_is_empty){
             if (input[right-2] == input[4]){
