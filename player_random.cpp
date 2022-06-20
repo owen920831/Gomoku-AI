@@ -25,23 +25,23 @@ int calculate_score(string input, int left, int right, int valid_range){
     char op = (input[4] == 'o')? 'x' : 'o';
     bool left_three = false, right_three = false;
     if (len >= 5){
-        if (defense) return -10000000; 
-        else return 1000000;
+        if (defense) current_score = -10000000; 
+        else current_score = 1500000;
     }
     else {
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
         if (!left_is_empty&&!right_is_empty){
-            return current_score*2;
+            current_score = 0;
         }
     }
     if (len == 4){
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
         if (left_is_empty && right_is_empty){
-            if (defense) current_score = -180000;
+            if (defense) current_score = -200000;
             else current_score = 50000;
         }
         else {
-            if (defense) current_score = -100000;
+            if (defense) current_score = -200000;
             else current_score = 400;
         }
     }
@@ -49,13 +49,13 @@ int calculate_score(string input, int left, int right, int valid_range){
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.'); 
         if (left_is_empty){
             if (input[left+2] == input[4]){
-                if (defense) current_score = -180000; //ooo.o
+                if (defense) current_score = -200000; //ooo.o
                 else current_score = 400;
             }
         }
         if (right_is_empty){
             if (input[left-2] == input[4]){         //o.ooo
-                if (defense) current_score = -180000;
+                if (defense) current_score = -200000;
                 else current_score = 400;
             }
         }
@@ -130,18 +130,22 @@ int calculate_score(string input, int left, int right, int valid_range){
             else current_score = 25;
         }
         else if (left_is_empty || right_is_empty){ // PMMX, XMMP
-            if (defense) current_score = -5;
-            else current_score = 1;
+            if (defense) current_score = -6;
+            else current_score = 3;
         }
     }
     else if (len == 1) {
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
+        if (right_is_empty && left_is_empty){
+            if (defense) current_score = -5;
+            else current_score = 2;
+        }
         if (right_is_empty){
             if (input[right-2] == input[4]){
                 if (input[right-3] == '.'){
                     if (input[left+1] == op){  // XMXMP
-                        if (defense) current_score = -5;
-                        else current_score = 1;
+                        if (defense) current_score = -6;
+                        else current_score = 3;
                     }
                 }
             }
@@ -154,8 +158,8 @@ int calculate_score(string input, int left, int right, int valid_range){
                         else current_score = 25;
                     }
                     else{// PMXMX
-                        if (defense) current_score = -5;
-                        else current_score = 1; 
+                        if (defense) current_score = -6;
+                        else current_score = 3; 
                     }
                 }
             }
@@ -171,27 +175,29 @@ int calculate_score(string input, int left, int right, int valid_range){
     return current_score;
 }
 
-int heuristic(int who){
+int heuristic(){
     string chess_road; 
     int score = 0;
     int dir[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 15; j++)
             chess_place[i][j].reset();
-    player_type[0] = ".", player_type[player] = "o", player_type[who] = "x";
+    player_type[0] = ".", player_type[player] = "o", player_type[opp] = "x";
     for (int i = 0; i < SIZE; i++){
         for (int j = 0; j < SIZE; j++){
             if (board[i][j] == EMPTY) continue;
             for (int k = 0; k < 4; k++){
-                if (chess_place[k][i][j]) continue; 
+                string op = (player_type[board[i][j]] == "o")? "x" : "o";
+                if (chess_place[k][i][j]) continue;
+                chess_place[k][i][j] = true; 
                 for (int l = -4; l <= 4; l++){
                     if (i+dir[k][0]*l >= 0 && i+dir[k][0]*l < SIZE && j+dir[k][1]*l >= 0 && j+dir[k][1]*l < SIZE)
                         chess_road += player_type[board[i+dir[k][0]*l][j+dir[k][1]*l]];
                     else
-                        chess_road += player_type[who];
+                        chess_road += op;
                 }
                 //cout << chess_road << '\n';
-                int left = 4, right = 4, l = 4, r = 4;
+                int left = 5, right = 3, l = 5, r = 3;
                 while (chess_road[left] == chess_road[4] && left <= 8){
                     chess_place[k][i+dir[k][0]*(left-4)][j+dir[k][1]*(left-4)] = true;
                     left++;
@@ -207,6 +213,7 @@ int heuristic(int who){
             }
         }
     }
+    //cout << '\n';
     //cout << score << '\n';
     return score;
 }
@@ -217,9 +224,8 @@ struct state{
     state(){
         chess_left = new_x = new_y = score = new_chess = 0;
     }
-    void set_on_board(int col, int row, int who){
-        new_x = col, new_y = row, new_chess = who;
-        //score = heuristic(who);
+    void set_on_board(int x, int y, int who){
+        new_x = x, new_y = y, new_chess = who;
     }
 };
 
@@ -245,8 +251,8 @@ vector<state> generate_all_move(int who){
 //(score, (x, y))
 state alpha_beta(state current, int depth, int alpha, int beta, int who){
     if (!depth || !current.chess_left){
-        current.score = heuristic(opp);
-        //cout << '\n' <<current.new_x << ' ' << current.new_y << ' ' <<current.score << '\n';
+        current.score = heuristic();
+        //cout <<current.new_x << ' ' << current.new_y << ' ' <<current.score << '\n';
         return current;
     }
     vector<state> all_moves = generate_all_move(who);
@@ -258,6 +264,7 @@ state alpha_beta(state current, int depth, int alpha, int beta, int who){
             board[node.new_x][node.new_y] = node.new_chess;
             node.chess_left--;
             evaluate = alpha_beta(node, depth-1, alpha, beta, opp);
+            cout <<evaluate.new_x << ' ' << evaluate.new_y << ' ' <<evaluate.score << '\n';
             board[node.new_x][node.new_y] = EMPTY;
             node.chess_left++;
             if (max_evaluate.score < evaluate.score) max_evaluate = evaluate;
@@ -274,6 +281,7 @@ state alpha_beta(state current, int depth, int alpha, int beta, int who){
             board[node.new_x][node.new_y] = node.new_chess;
             node.chess_left--;
             evaluate = alpha_beta(node, depth-1, alpha, beta, player);
+            //cout <<evaluate.new_x << ' ' << evaluate.new_y << ' ' <<evaluate.score << '\n' << '\n';
             board[node.new_x][node.new_y] = EMPTY;
             node.chess_left++;
             if (min_evaluate.score > evaluate.score) min_evaluate = evaluate;
@@ -308,7 +316,7 @@ void write_valid_spot(std::ofstream& fout) {
     }
     if (!flag) x = y = 7; //if is empty，choose the middle
     else {
-        state now = alpha_beta(initial, 1, INT_MIN+100, INT_MAX-100, player);
+        state now = alpha_beta(initial, 1, INT_MIN, INT_MAX, player);
         x = now.new_x;
         y = now.new_y;
     }
