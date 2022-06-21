@@ -25,8 +25,8 @@ int calculate_score(string input, int left, int right, int valid_range){
     char op = (input[4] == 'o')? 'x' : 'o';
     bool left_three = false, right_three = false;
     if (len >= 5){
-        if (defense) current_score = -10000000; 
-        else current_score = 480000;
+        if (defense) current_score = -100000000; 
+        else current_score = 1900000;
     }
     else {
         if (valid_range <= 4){
@@ -128,27 +128,13 @@ int calculate_score(string input, int left, int right, int valid_range){
             if (defense) current_score = -60;
             else current_score = 25;
         }
-        else if (left_is_empty || right_is_empty){ // PMMX, XMMP
+        else if ((left_is_empty && input[right-2] == op)|| (right_is_empty && input[left+2] == op)){ // PMMX, XMMP
             if (defense) current_score = -3;
             else current_score = 1;
         }
     }
     else if (len == 1) {
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
-        if (right_is_empty && left_is_empty){
-            if (input[right-2] == input[4] && input[left+2] == input[4]){  //o.o.o
-                if (defense) current_score = -60;
-                else current_score = 25;
-            }
-            else if ((input[right-2] == input[4] && input[left+2] == op)||(input[left+2] == input[4] && input[right-2] == op)){
-                if (defense) current_score = -60;
-                else current_score = 25;
-            }
-            else if (valid_range > 4){
-                if (defense) current_score = -3;
-                else current_score = 1;
-            }
-        }
         if (right_is_empty){
             if (input[right-2] == input[4]){
                 if (input[right-3] == '.'){
@@ -331,30 +317,37 @@ void read_board(std::ifstream& fin) {
 }
 
 void write_valid_spot(std::ofstream& fout) {
-    int x, y;
-    bool flag = false; //check whether the board is empty
-    state initial;
-    state now;
-    opp = (player == 1)?2:1;
-    for (int i = 0; i < SIZE; i++){
-        for (int j = 0; j < SIZE; j++){
-            if (board[i][j] != EMPTY){
-                flag = true;
-                initial.chess_left++;
+    int x, y, good = INT_MIN;
+    while (1){
+        bool flag = false; //check whether the board is empty
+        state initial;
+        state now;
+        int depth = 2;
+        opp = (player == 1)?2:1;
+        for (int i = 0; i < SIZE; i++){
+            for (int j = 0; j < SIZE; j++){
+                if (board[i][j] != EMPTY){
+                    flag = true;
+                    initial.chess_left++;
+                }
             }
         }
-    }
-    if (!flag) x = y = 7; //if is empty，choose the middle
-    else {
-        now = alpha_beta(initial, 2, INT_MIN, INT_MAX, player);
-        x = now.new_x;
-        y = now.new_y;
-    }
-    if (board[x][y] == EMPTY) {
-        //cout << "place :" << x << ' ' << y << ' ' << now.score << '\n';
-        fout << x << " " << y << std::endl;
+        if (!flag) x = y = 7; //if is empty，choose the middle
+        else {
+            now = alpha_beta(initial, depth, INT_MIN, INT_MAX, player);
+            x = now.new_x;
+            y = now.new_y;
+        }
+        depth+=2;
+        if (good < now.score){
+            good = now.score;
+            fout << x << " " << y << std::endl;
+        }
         // Remember to flush the output to ensure the last action is written to file.
         fout.flush();
+        if (good > 1000000 || !flag){
+            break;
+        }
     }
 }
  
