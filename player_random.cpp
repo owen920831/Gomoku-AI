@@ -21,53 +21,54 @@ int calculate_score(string input, int left, int right, int valid_range){
     int current_score = 1;
     string compare; compare.push_back(input[4]); 
     int defense = (compare != "o"), len = left - right + 1;
-    if (defense) current_score*=-2;
+    if (defense) current_score*= -3;
     char op = (input[4] == 'o')? 'x' : 'o';
     bool left_three = false, right_three = false;
     if (len >= 5){
-        if (defense) return -10000000; 
-        else return 1500000;
+        if (defense) current_score = -10000000; 
+        else current_score = 480000;
     }
     else {
-        if (valid_range <= 4)
-            return 0;
+        if (valid_range <= 4){
+            current_score = 0;
+        }
     }
     if (len == 4){
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
         if (left_is_empty && right_is_empty){
-            if (defense) current_score = -200000;
+            if (defense) current_score = -210000;
             else current_score = 50000;
         }
-        else {
-            if (defense) current_score = -150000;
-            else current_score = 400;
+        else if (valid_range > 4){
+            if (defense) current_score = -180000;
+            else current_score = 1000;
         }
     }
     else if (len == 3){
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.'); 
         if (left_is_empty){
             if (input[left+2] == input[4]){
-                if (defense) current_score =  -150000; //ooo.o
-                else current_score =  400;
+                if (defense) current_score = -180000; //ooo.o
+                else current_score = 1000;
             }
         }
         if (right_is_empty){
             if (input[left-2] == input[4]){         //o.ooo
-                if (defense)  current_score = -150000;
-                else current_score = 400;
+                if (defense) current_score = -180000;
+                else current_score = 1000;
             }
         }
         if (left_is_empty && right_is_empty){
             if (valid_range > 5){               //.ooo..
-                if (defense) current_score = -10000;
-                else current_score = 400;
+                if (defense) current_score = -18000;
+                else current_score = 1000;
             }
             else {                            //.ooo.x
                 if (defense) current_score = -60;
                 else current_score = 25;
             }
         }
-        else {                              
+        else if (valid_range > 4){                              
             if (defense) current_score = -60;
             else current_score = 25;
         }
@@ -79,8 +80,8 @@ int calculate_score(string input, int left, int right, int valid_range){
             if (input[right-2] == input[4]){
                 if (input[right-3] == '.'){
                     if (input[left+1] == '.'){ // XMXMMX
-                        if (defense) current_score = -10000;
-                        else current_score = 400;
+                        if (defense) current_score = -18000;
+                        else current_score = 1000;
                     }
                     else{           // XMXMMP
                         if (defense) current_score = -60;
@@ -100,14 +101,14 @@ int calculate_score(string input, int left, int right, int valid_range){
         if (left_is_empty){
             if (input[left+2] == input[4]){
                 if (input[left+3] == input[4]){  // MMXMM
-                    if (defense) current_score = -150000;
-                    else current_score = 400;
+                    if (defense) current_score = -180000;
+                    else current_score = 1000;
                     left_three = true;
                 }
                 else if (input[left+3] == '.'){
                     if (right_is_empty){  //XMMXMX
-                        if (defense) current_score = -10000;
-                        else current_score = 400;
+                        if (defense) current_score = -18000;
+                        else current_score = 1000;
                     }
                     else{ // PMMXMX
                         if (defense) current_score = -60;
@@ -128,32 +129,32 @@ int calculate_score(string input, int left, int right, int valid_range){
             else current_score = 25;
         }
         else if (left_is_empty || right_is_empty){ // PMMX, XMMP
-            if (defense) current_score = -4;
-            else current_score = 2;
+            if (defense) current_score = -3;
+            else current_score = 1;
         }
     }
     else if (len == 1) {
         bool left_is_empty = (input[left+1] == '.'), right_is_empty = (input[right-1] == '.');
         if (right_is_empty && left_is_empty){
-            if (input[right-2] == input[4] && input[left+2] == input[4]){ //o.o.o
+            if (input[right-2] == input[4] && input[left+2] == input[4]){  //o.o.o
                 if (defense) current_score = -60;
                 else current_score = 25;
             }
             else if ((input[right-2] == input[4] && input[left+2] == op)||(input[left+2] == input[4] && input[right-2] == op)){
-                if (defense) current_score = -60; //x.o.o.
+                if (defense) current_score = -60;
                 else current_score = 25;
             }
-            else{
-                if (defense) current_score = -4;
-                else current_score = 2;
+            else if (valid_range > 4){
+                if (defense) current_score = -3;
+                else current_score = 1;
             }
         }
         if (right_is_empty){
             if (input[right-2] == input[4]){
                 if (input[right-3] == '.'){
                     if (input[left+1] == op){  // XMXMP
-                        if (defense) current_score = -4;
-                        else current_score = 2;
+                        if (defense) current_score = -3;
+                        else current_score = 1;
                     }
                 }
             }
@@ -165,9 +166,9 @@ int calculate_score(string input, int left, int right, int valid_range){
                         if (defense) current_score = -60;
                         else current_score = 25;
                     }
-                    else{// PMXMX
-                        if (defense) current_score = -4;
-                        else current_score = 2; 
+                    else if (valid_range > 4){// PMXMX
+                        if (defense) current_score = -3;
+                        else current_score = 1; 
                     }
                 }
             }
@@ -176,14 +177,10 @@ int calculate_score(string input, int left, int right, int valid_range){
                     if (defense) current_score = -60;
                     else current_score = 25;
                 }
-                else if (input[left+3] == '.' && input[left+4] == input[4]){
-                    if (defense) current_score = -60;
-                    else current_score = 25;
-                }
             }
         }
     }
-    //cout << current_score << '\n';
+    //cout << current_score << ' ';
     return current_score;
 }
 
